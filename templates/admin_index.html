@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <style>
+        body {
+            font-family: 'Times New Roman', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            color: #0056b3;
+        }
+        .admin-nav {
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .admin-nav a {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-right: 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .admin-nav a:hover {
+            background-color: #0056b3;
+        }
+        .content-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+
+    <nav class="admin-nav">
+        <a href="/">Trở về trang http://127.0.0.1:5000/</a>
+        <a href="/admin/quiz_results_management">Quản lý Kết quả</a>
+        <a href="/admin/questions_management">Quản lý Câu hỏi</a>
+        <a href="/admin/topics_management">Quản lý Chủ đề</a>
+        <a href="/admin/presets_management">Quản lý Preset</a>
+    </nav>
+
+    <div class="content-section">
+        <h2>Chào mừng đến với trang quản trị!</h2>
+        <p>Sử dụng thanh điều hướng để quản lý các mục trong cơ sở dữ liệu của bạn.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quản lý Chủ đề</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <style>
+        body {
+            font-family: 'Times New Roman', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+        }
+        .success-message {
+            color: green;
+            margin-bottom: 10px;
+        }
+        .back-button {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-top: 20px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+         .update-topic-container {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .update-topic-container h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .update-topic-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .update-topic-container input[type="text"] {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .update-topic-container button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .update-topic-container button:hover {
+            background-color: #218838;
+        }
+        .update-topic-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none; /* Ẩn ban đầu */
+        }
+        .success-message-topic { /* Đổi tên để tránh trùng với form-error-message */
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error-message-topic { /* Đổi tên để tránh trùng với form-error-message */
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <a href="/admin" class="back-button">Trở về Admin Dashboard</a>
+    <div class="container">
+        <h1>Quản lý Chủ đề</h1>
+        <p id="topicFormMessage" class="error-message"></p>
+
+        <h2>Danh sách Chủ đề</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Chủ đề</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="topicsTableBody">
+                </tbody>
+        </table>
+
+        <div class="update-topic-container">
+            <h2>Cập nhật tên Chủ đề</h2>
+            <label for="old_topic_name_admin">Tên Chủ đề CŨ:</label>
+            <input type="text" id="old_topic_name_admin" placeholder="Nhập tên chủ đề cũ">
+            <label for="new_topic_name_admin">Tên Chủ đề MỚI:</label>
+            <input type="text" id="new_topic_name_admin" placeholder="Nhập tên chủ đề mới">
+            <button id="update_topic_button_admin">Cập nhật Chủ đề</button>
+            <div id="update-topic-message-admin"></div>
+        </div>
+    </div>
+
+    <script>
+        const topicsTableBody = document.getElementById('topicsTableBody');
+        const topicFormMessage = document.getElementById('topicFormMessage');
+        const oldTopicNameInputAdmin = document.getElementById('old_topic_name_admin');
+        const newTopicNameInputAdmin = document.getElementById('new_topic_name_admin');
+        const updateTopicButtonAdmin = document.getElementById('update_topic_button_admin');
+        const updateTopicMessageAdmin = document.getElementById('update-topic-message-admin');
+
+
+        async function fetchTopics() {
+            try {
+                const response = await fetch('/admin/topics');
+                const topics = await response.json();
+                topicsTableBody.innerHTML = '';
+                topics.forEach(topic => {
+                    const row = topicsTableBody.insertRow();
+                    row.insertCell().textContent = topic;
+                    const actionsCell = row.insertCell();
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Xóa';
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.onclick = () => deleteTopic(topic);
+                    actionsCell.appendChild(deleteBtn);
+                });
+            } catch (error) {
+                console.error('Error fetching topics:', error);
+                topicFormMessage.textContent = 'Lỗi khi tải chủ đề.';
+                topicFormMessage.className = 'error-message';
+            }
+        }
+
+        async function deleteTopic(topicName) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa chủ đề '${topicName}' và tất cả câu hỏi, tùy chọn, cấu hình preset liên quan?`)) return;
+            try {
+                const response = await fetch(`/admin/topics/${topicName}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    topicFormMessage.textContent = result.message;
+                    topicFormMessage.className = 'success-message';
+                    fetchTopics(); // Refresh the list
+                } else {
+                    topicFormMessage.textContent = result.error;
+                    topicFormMessage.className = 'error-message';
+                }
+            } catch (error) {
+                console.error('Error deleting topic:', error);
+                topicFormMessage.textContent = 'Lỗi khi xóa chủ đề.';
+                topicFormMessage.className = 'error-message';
+            }
+        }
+
+        updateTopicButtonAdmin.addEventListener('click', async () => {
+            const oldTopic = oldTopicNameInputAdmin.value.trim();
+            const newTopic = newTopicNameInputAdmin.value.trim();
+
+            updateTopicMessageAdmin.style.display = 'none';
+            updateTopicMessageAdmin.className = '';
+
+            if (!oldTopic || !newTopic) {
+                updateTopicMessageAdmin.textContent = "Vui lòng nhập đầy đủ tên chủ đề cũ và mới.";
+                updateTopicMessageAdmin.className = 'error-message-topic';
+                updateTopicMessageAdmin.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/update_topic', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_topic: oldTopic, new_topic: newTopic })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateTopicMessageAdmin.textContent = `Topic đã được cập nhật thành công! (Questions: ${data.questions_updated}, Presets: ${data.presets_updated})`;
+                    updateTopicMessageAdmin.className = 'success-message-topic';
+                    oldTopicNameInputAdmin.value = '';
+                    newTopicNameInputAdmin.value = '';
+                    fetchTopics(); // Refresh the topic list after update
+                } else {
+                    updateTopicMessageAdmin.textContent = `Lỗi: ${data.error}`;
+                    updateTopicMessageAdmin.className = 'error-message-topic';
+                }
+                updateTopicMessageAdmin.style.display = 'block';
+            } catch (error) {
+                console.error("Lỗi khi cập nhật topic:", error);
+                updateTopicMessageAdmin.textContent = "Có lỗi xảy ra khi gửi yêu cầu cập nhật topic.";
+                updateTopicMessageAdmin.className = 'error-message-topic';
+                updateTopicMessageAdmin.style.display = 'block';
+            }
+        });
+
+        fetchTopics(); // Initial load
+    </script>
+</body>
+</html>

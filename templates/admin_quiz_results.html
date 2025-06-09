@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Kết quả Bài kiểm tra - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .detail-button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #quizDetailsModal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quản lý Kết quả Bài kiểm tra</h1>
+        <nav>
+            <a href="/">Trở về trang http://127.0.0.1:5000/</a>
+            <a href="/admin">Trang chủ Admin</a> |
+            <a href="/admin/quiz_results_management">Quản lý Kết quả</a>
+            <a href="/admin/questions_management">Quản lý Câu hỏi</a> |
+            <a href="/admin/topics_management">Quản lý Chủ đề</a> |
+            <a href="/admin/presets_management">Quản lý Preset</a> |
+        </nav>
+        <hr>
+
+        <div id="message"></div>
+
+        <h2>Danh sách các Bài kiểm tra đã làm</h2>
+        <table id="quizResultsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên người chơi</th>
+                    <th>Điểm</th>
+                    <th>Tổng câu hỏi</th>
+                    <th>Phần trăm đúng</th>
+                    <th>Thời gian (giây)</th>
+                    <th>Thời gian làm</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+
+        <div id="quizDetailsModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Chi tiết Bài làm <span id="modalPlayerName"></span></h2>
+                <table id="quizDetailsTable">
+                    <thead>
+                        <tr>
+                            <th>ID Câu hỏi</th>
+                            <th>Nội dung Câu hỏi</th>
+                            <th>Câu trả lời của bạn</th>
+                            <th>Đáp án đúng</th>
+                            <th>Đúng/Sai</th>
+                            <th>Thời gian (giây)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadQuizResults();
+
+            // Lấy các phần tử modal
+            var modal = document.getElementById("quizDetailsModal");
+            var span = document.getElementsByClassName("close-button")[0];
+
+            // Khi người dùng click vào nút đóng (x)
+            span.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            // Khi người dùng click ra ngoài modal, đóng modal
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        });
+
+        async function loadQuizResults() {
+            const tableBody = document.querySelector('#quizResultsTable tbody');
+            tableBody.innerHTML = ''; // Xóa dữ liệu cũ
+
+            try {
+                const response = await fetch('/admin/get_all_quiz_results');
+                const results = await response.json();
+
+                if (response.ok) {
+                    if (results.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="8">Chưa có bài kiểm tra nào được lưu.</td></tr>';
+                        return;
+                    }
+                    results.forEach(result => {
+                        const row = tableBody.insertRow();
+                        row.insertCell().textContent = result.id;
+                        row.insertCell().textContent = result.player_name;
+                        row.insertCell().textContent = `${result.score}/${result.total_questions}`;
+                        row.insertCell().textContent = result.total_questions;
+                        row.insertCell().textContent = `${result.percentage.toFixed(2)}%`;
+                        row.insertCell().textContent = result.time_taken;
+                        // Sử dụng chuỗi đã định dạng từ backend
+                        row.insertCell().textContent = result.timestamp_formatted; // <-- Đã thay đổi dòng này
+
+                        const actionCell = row.insertCell();
+                        const detailButton = document.createElement('button');
+                        detailButton.textContent = 'Xem Chi tiết';
+                        detailButton.className = 'detail-button';
+                        detailButton.onclick = () => showQuizDetails(result.id, result.player_name);
+                        actionCell.appendChild(detailButton);
+                    });
+                } else {
+                    displayMessage(`Lỗi: ${results.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải kết quả bài kiểm tra:', error);
+                displayMessage('Không thể tải kết quả bài kiểm tra.', 'error');
+            }
+        }
+
+        async function showQuizDetails(quizResultId, playerName) {
+            const modal = document.getElementById("quizDetailsModal");
+            const modalPlayerName = document.getElementById("modalPlayerName");
+            const detailsTableBody = document.querySelector('#quizDetailsTable tbody');
+            detailsTableBody.innerHTML = ''; // Xóa dữ liệu cũ
+
+            modalPlayerName.textContent = `của ${playerName}`;
+            modal.style.display = "block"; // Hiển thị modal
+
+            try {
+                const response = await fetch(`/admin/get_quiz_details/${quizResultId}`);
+                const details = await response.json();
+
+                if (response.ok) {
+                    if (details.length === 0) {
+                        detailsTableBody.innerHTML = '<tr><td colspan="6">Không có chi tiết cho bài kiểm tra này.</td></tr>';
+                        return;
+                    }
+                    details.forEach(detail => {
+                        const row = detailsTableBody.insertRow();
+                        row.insertCell().textContent = detail.question_id;
+                        row.insertCell().textContent = detail.question_text;
+                        row.insertCell().textContent = detail.user_answer || 'Không trả lời'; // Hiển thị 'Không trả lời' nếu null
+                        row.insertCell().textContent = detail.correct_answer;
+                        row.insertCell().textContent = detail.is_correct ? 'Đúng' : 'Sai';
+                        row.insertCell().textContent = detail.time_spent_on_question || 'N/A';
+                        row.style.backgroundColor = detail.is_correct ? '#e6ffe6' : '#ffe6e6'; // Highlight đúng/sai
+                    });
+                } else {
+                    displayMessage(`Lỗi: ${details.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải chi tiết bài kiểm tra:', error);
+                displayMessage('Không thể tải chi tiết bài kiểm tra.', 'error');
+            }
+        }
+
+        function displayMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = type; // 'success' hoặc 'error'
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
