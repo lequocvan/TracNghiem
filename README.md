@@ -24,3 +24,5 @@ Hoặc là bạn chọn câu trả lời, nhấn tiếp theo thì đúng sẽ m�
 Tạo thư mục TracNghiem tại C: =>  Copy toàn bộ file vào thư mục TracNghiem
 Trong thư mục TracNghiem có các files (quiz.db; app.py) và thư mục con là templates (trong đó có các tập tin *.html)
 Dùng file [Tu file excel questions tao CSDL quiz_db.py] và [questions.xlsx] chạy trên python tạo ra quiz.db nhé!!!!!
+
+https://youtu.be/1xF-mcrRzs0?si=Q694w5oMl6ubP96F
